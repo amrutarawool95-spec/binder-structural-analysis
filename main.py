@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
+import sys
 import tempfile
 import urllib.error
 import urllib.request
@@ -268,5 +270,16 @@ def main() -> int:
     return 0
 
 
+def _running_under_streamlit() -> bool:
+    """Detect Streamlit's script runner without affecting CLI execution."""
+
+    return "streamlit" in sys.modules or bool(os.environ.get("STREAMLIT_SERVER_PORT"))
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    if _running_under_streamlit():
+        from app import render_app
+
+        render_app()
+    else:
+        raise SystemExit(main())
