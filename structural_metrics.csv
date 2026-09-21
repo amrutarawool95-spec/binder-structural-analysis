@@ -1,0 +1,7 @@
+pdb_id,group,chain,description,experimental_method,metric_interpretation,atom_count,mean_b_factor,median_b_factor,stdev_b_factor,minimum_b_factor,maximum_b_factor
+6V67,De novo miniprotein,A,De novo PD-1-binding miniprotein GR918.2 (apo),X-ray diffraction,Experimental B-factor; not pLDDT,668,14.96504491017964,13.85,4.4679172864123835,8.08,29.43
+7S5B,De novo miniprotein,A,De novo binder to human interleukin-7 receptor (unbound),X-ray diffraction,Experimental B-factor; not pLDDT,893,39.65147816349384,34.55,16.08450744965165,22.06,127.91
+8VEI,De novo miniprotein,A,De novo designed colic-acid binder CHD_r1,X-ray diffraction,Experimental B-factor; not pLDDT,997,58.39134403209629,56.47,17.241230713279215,27.24,108.03
+1MLC,Natural antibody,E,Fab D44.1 bound to chicken egg-white lysozyme,X-ray diffraction,Experimental B-factor; not pLDDT,1001,41.23436563436564,43.07,15.936478465341755,4.25,74.56
+4JHW,Natural antibody,H,RSV fusion glycoprotein bound to antibody D25,X-ray diffraction,Experimental B-factor; not pLDDT,1683,151.94511586452762,149.54,43.214126499171506,67.28,264.84
+1ADQ,Natural antibody,H,Human rheumatoid-factor Fab bound to IgG Fc,X-ray diffraction,Experimental B-factor; not pLDDT,1736,42.373692396313366,41.2,26.252102731578344,2.0,79.01
