@@ -18,10 +18,23 @@ st.set_page_config(
     layout="wide",
 )
 
+LOCAL_RESULTS = Path(__file__).with_name("structural_metrics.csv")
+
+
+@st.cache_data
+def load_bundled_results() -> tuple[pd.DataFrame, list[str]]:
+    """Load the checked-in snapshot so the app can render without network I/O."""
+
+    if not LOCAL_RESULTS.exists():
+        raise RuntimeError(
+            "The bundled structural_metrics.csv file is missing from the repository."
+        )
+    return pd.read_csv(LOCAL_RESULTS), []
+
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def load_results() -> tuple[pd.DataFrame, list[str]]:
-    """Download and analyze the curated dataset, caching results for one hour."""
+def load_remote_results() -> tuple[pd.DataFrame, list[str]]:
+    """Download and analyze the curated dataset, caching live results for one hour."""
 
     rows: list[dict[str, object]] = []
     errors: list[str] = []
@@ -41,6 +54,26 @@ def load_results() -> tuple[pd.DataFrame, list[str]]:
     return pd.DataFrame(rows), errors
 
 
+def load_results(
+    refresh_from_rcsb: bool,
+) -> tuple[pd.DataFrame, list[str], str]:
+    """Prefer the bundled snapshot and make live refresh opt-in and resilient."""
+
+    if not refresh_from_rcsb:
+        results, errors = load_bundled_results()
+        return results, errors, "Showing the bundled verified snapshot."
+
+    try:
+        results, errors = load_remote_results()
+        return results, errors, "Showing fresh results downloaded from RCSB."
+    except Exception as error:
+        results, errors = load_bundled_results()
+        errors.append(
+            f"Live refresh failed ({error}); showing the bundled snapshot instead."
+        )
+        return results, errors, "Live refresh failed safely; using the bundled snapshot."
+
+
 def create_plot_bytes(data: pd.DataFrame) -> bytes:
     """Render the shared analysis plot without writing into the repository."""
 
@@ -58,10 +91,13 @@ st.write(
 
 with st.sidebar:
     st.header("Controls")
-    if st.button("Refresh data"):
+    refresh_from_rcsb = st.button("Refresh from RCSB")
+    if refresh_from_rcsb:
         st.cache_data.clear()
-        st.rerun()
-    st.caption("Results are cached for one hour to avoid repeated PDB downloads.")
+    st.caption(
+        "The app starts from the bundled results so it can render immediately. "
+        "Live downloads are optional and cached for one hour."
+    )
 
     st.header("Scientific scope")
     st.info(
@@ -70,12 +106,18 @@ with st.sidebar:
     )
 
 try:
-    with st.spinner("Downloading and analyzing PDB structures…"):
-        results, errors = load_results()
+    with st.spinner(
+        "Refreshing from RCSB…"
+        if refresh_from_rcsb
+        else "Loading the bundled analysis…"
+    ):
+        results, errors, data_source = load_results(refresh_from_rcsb)
 except Exception as error:
     st.error("The analysis could not load.")
     st.exception(error)
     st.stop()
+
+st.success(data_source)
 
 if errors:
     st.warning("Some structures could not be analyzed:")
