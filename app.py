@@ -12,12 +12,6 @@ import streamlit as st
 from main import STRUCTURES, create_plot, summarize_target
 
 
-st.set_page_config(
-    page_title="Binder Structural Analysis",
-    page_icon="🧬",
-    layout="wide",
-)
-
 LOCAL_RESULTS = Path(__file__).with_name("structural_metrics.csv")
 
 
@@ -83,109 +77,124 @@ def create_plot_bytes(data: pd.DataFrame) -> bytes:
         return plot_path.read_bytes()
 
 
-st.title("Computational Post-Analysis of PDB Structures")
-st.write(
-    "Compare chain-level B-factors from curated de novo miniprotein and "
-    "natural-antibody structures without running GPU-heavy models."
-)
+def render_app() -> None:
+    """Render the full Streamlit page."""
 
-with st.sidebar:
-    st.header("Controls")
-    refresh_from_rcsb = st.button("Refresh from RCSB")
-    if refresh_from_rcsb:
-        st.cache_data.clear()
-    st.caption(
-        "The app starts from the bundled results so it can render immediately. "
-        "Live downloads are optional and cached for one hour."
+    st.set_page_config(
+        page_title="Binder Structural Analysis",
+        page_icon="🧬",
+        layout="wide",
     )
 
-    st.header("Scientific scope")
-    st.info(
-        "These entries are experimental X-ray structures. Their B-factors are "
-        "crystallographic temperature factors, not pLDDT."
+    st.title("Computational Post-Analysis of PDB Structures")
+    st.write(
+        "Compare chain-level B-factors from curated de novo miniprotein and "
+        "natural-antibody structures without running GPU-heavy models."
     )
 
-try:
-    with st.spinner(
-        "Refreshing from RCSB…"
-        if refresh_from_rcsb
-        else "Loading the bundled analysis…"
-    ):
-        results, errors, data_source = load_results(refresh_from_rcsb)
-except Exception as error:
-    st.error("The analysis could not load.")
-    st.exception(error)
-    st.stop()
+    with st.sidebar:
+        st.header("Controls")
+        refresh_from_rcsb = st.button("Refresh from RCSB")
+        if refresh_from_rcsb:
+            st.cache_data.clear()
+        st.caption(
+            "The app starts from the bundled results so it can render immediately. "
+            "Live downloads are optional and cached for one hour."
+        )
 
-st.success(data_source)
+        st.header("Scientific scope")
+        st.info(
+            "These entries are experimental X-ray structures. Their B-factors are "
+            "crystallographic temperature factors, not pLDDT."
+        )
 
-if errors:
-    st.warning("Some structures could not be analyzed:")
-    for error in errors:
-        st.write(f"- {error}")
+    try:
+        with st.spinner(
+            "Refreshing from RCSB…"
+            if refresh_from_rcsb
+            else "Loading the bundled analysis…"
+        ):
+            results, errors, data_source = load_results(refresh_from_rcsb)
+    except Exception as error:
+        st.error("The analysis could not load.")
+        st.exception(error)
+        st.stop()
 
-summary = (
-    results.groupby("group", sort=False)["mean_b_factor"]
-    .agg(["count", "mean", "median"])
-    .reset_index()
-)
+    st.success(data_source)
 
-metric_columns = st.columns(len(summary))
-for column, row in zip(metric_columns, summary.to_dict("records")):
-    column.metric(
-        label=f"{row['group']} mean B-factor",
-        value=f"{row['mean']:.2f}",
-        help="Source-specific experimental B-factor units; not pLDDT.",
+    if errors:
+        st.warning("Some structures could not be analyzed:")
+        for error in errors:
+            st.write(f"- {error}")
+
+    summary = (
+        results.groupby("group", sort=False)["mean_b_factor"]
+        .agg(["count", "mean", "median"])
+        .reset_index()
     )
 
-st.subheader("Comparison")
-st.image(
-    create_plot_bytes(results),
-    caption="Mean atom B-factor with one point per analyzed PDB chain.",
-    width="stretch",
-)
+    metric_columns = st.columns(len(summary))
+    for column, row in zip(metric_columns, summary.to_dict("records")):
+        column.metric(
+            label=f"{row['group']} mean B-factor",
+            value=f"{row['mean']:.2f}",
+            help="Source-specific experimental B-factor units; not pLDDT.",
+        )
 
-st.subheader("Structure-level results")
-display_columns = [
-    "pdb_id",
-    "group",
-    "chain",
-    "description",
-    "atom_count",
-    "mean_b_factor",
-    "median_b_factor",
-    "stdev_b_factor",
-]
-st.dataframe(
-    results[display_columns].round({"mean_b_factor": 2, "median_b_factor": 2, "stdev_b_factor": 2}),
-    width="stretch",
-    hide_index=True,
-)
-st.download_button(
-    "Download results CSV",
-    data=results.to_csv(index=False),
-    file_name="structural_metrics.csv",
-    mime="text/csv",
-)
+    st.subheader("Comparison")
+    st.image(
+        create_plot_bytes(results),
+        caption="Mean atom B-factor with one point per analyzed PDB chain.",
+        width="stretch",
+    )
 
-with st.expander("Dataset and interpretation"):
+    st.subheader("Structure-level results")
+    display_columns = [
+        "pdb_id",
+        "group",
+        "chain",
+        "description",
+        "atom_count",
+        "mean_b_factor",
+        "median_b_factor",
+        "stdev_b_factor",
+    ]
     st.dataframe(
-        pd.DataFrame(
-            [
-                {
-                    "PDB": target.pdb_id,
-                    "Group": target.group,
-                    "Chain": target.chain,
-                    "Structure": target.description,
-                }
-                for target in STRUCTURES
-            ]
+        results[display_columns].round(
+            {"mean_b_factor": 2, "median_b_factor": 2, "stdev_b_factor": 2}
         ),
         width="stretch",
         hide_index=True,
     )
-    st.write(
-        "A B-factor can represent pLDDT only when the source prediction "
-        "pipeline explicitly documents that convention. Do not compare these "
-        "experimental temperature factors as AI confidence scores."
+    st.download_button(
+        "Download results CSV",
+        data=results.to_csv(index=False),
+        file_name="structural_metrics.csv",
+        mime="text/csv",
     )
+
+    with st.expander("Dataset and interpretation"):
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "PDB": target.pdb_id,
+                        "Group": target.group,
+                        "Chain": target.chain,
+                        "Structure": target.description,
+                    }
+                    for target in STRUCTURES
+                ]
+            ),
+            width="stretch",
+            hide_index=True,
+        )
+        st.write(
+            "A B-factor can represent pLDDT only when the source prediction "
+            "pipeline explicitly documents that convention. Do not compare these "
+            "experimental temperature factors as AI confidence scores."
+        )
+
+
+if __name__ == "__main__":
+    render_app()
