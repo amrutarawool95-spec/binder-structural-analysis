@@ -19,6 +19,9 @@ from pathlib import Path
 from statistics import mean, median, pstdev
 from typing import Iterable
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
