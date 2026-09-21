@@ -41,6 +41,27 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
+## Streamlit deployment
+
+The repository includes `app.py` as the Streamlit entrypoint. To deploy on
+Streamlit Community Cloud:
+
+1. Select the repository
+   `amrutarawool95-spec/binder-structural-analysis`.
+2. Set the branch to `main`.
+3. Set **Main file path** to `app.py`.
+4. Deploy.
+
+The app downloads the PDB files on first load, caches the results for one hour,
+and shows a refresh button in the sidebar. All Python dependencies, including
+`streamlit`, are listed in `requirements.txt`.
+
+To run it locally:
+
+```bash
+streamlit run app.py
+```
+
 The script creates:
 
 - `structural_metrics.csv` — one row per analyzed PDB chain
