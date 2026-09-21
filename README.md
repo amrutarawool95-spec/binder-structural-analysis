@@ -52,8 +52,11 @@ Streamlit Community Cloud:
 3. Set **Main file path** to `app.py`.
 4. Deploy.
 
-The app downloads the PDB files on first load, caches the results for one hour,
-and shows a refresh button in the sidebar. All Python dependencies, including
+The app loads the checked-in `structural_metrics.csv` snapshot first, so the
+page renders immediately even when Streamlit Cloud has slow or restricted
+outbound network access. The **Refresh from RCSB** button is optional; it
+downloads the PDB files, caches live results for one hour, and falls back to
+the bundled snapshot if a refresh fails. All Python dependencies, including
 `streamlit`, are listed in `requirements.txt`.
 
 To run it locally:
