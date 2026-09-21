@@ -54,9 +54,17 @@ Streamlit Community Cloud:
 
 The app loads the checked-in `structural_metrics.csv` snapshot first, so the
 page renders immediately even when Streamlit Cloud has slow or restricted
-outbound network access. The **Refresh from RCSB** button is optional; it
-downloads the PDB files, caches live results for one hour, and falls back to
-the bundled snapshot if a refresh fails. All Python dependencies, including
+outbound network access. It has two separate analysis modes:
+
+- **Experimental structures → B-factor**: lower generally means less atomic
+  mobility within comparable crystallographic experiments.
+- **AI-predicted structures → pLDDT**: higher means greater predicted
+  confidence, when the prediction pipeline stored pLDDT in the B-factor field.
+
+The **Refresh experimental data from RCSB** button is optional; it downloads the
+experimental PDB files, caches live results for one hour, and falls back to the
+bundled snapshot if a refresh fails. The AI mode accepts either an uploaded PDB
+file or an RCSB PDB ID and chain. All Python dependencies, including
 `streamlit`, are listed in `requirements.txt`.
 
 The repository also keeps `main.py` compatible with Streamlit Cloud if an
