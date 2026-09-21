@@ -59,6 +59,11 @@ downloads the PDB files, caches live results for one hour, and falls back to
 the bundled snapshot if a refresh fails. All Python dependencies, including
 `streamlit`, are listed in `requirements.txt`.
 
+The repository also keeps `main.py` compatible with Streamlit Cloud if an
+existing deployment still points to that file: it automatically hands off to
+the same UI when run by Streamlit, while remaining a command-line script when
+run with Python.
+
 To run it locally:
 
 ```bash
